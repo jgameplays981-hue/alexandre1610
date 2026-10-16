@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cursos e Alunos</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+    h1 { margin-bottom: 0; }
+    h2 { margin-top: 2rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #ddd; }
+    th { background: #f4f4f4; }
+    .erro { color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>Cursos e Alunos</h1>
+  <p>Dados vindos do Supabase.</p>
+
+  <h2>Cursos</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Nome</th><th>Total de alunos</th></tr></thead>
+    <tbody id="cursos"></tbody>
+  </table>
+
+  <h2>Alunos</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Nome</th><th>RA</th><th>Curso</th><th>Cadastro</th></tr></thead>
+    <tbody id="alunos"></tbody>
+  </table>
+
+  <script>
+    async function carregar(url, tbodyId, linha, colunas) {
+      const tbody = document.getElementById(tbodyId);
+      try {
+        const resp = await fetch(url);
+        const dados = await resp.json();
+        if (!resp.ok) throw new Error(dados.erro || 'Erro ao carregar');
+        tbody.innerHTML = dados.map(linha).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="${colunas}" class="erro">${e.message}</td></tr>`;
+      }
+    }
+
+    carregar('/api/cursos', 'cursos',
+      (c) => `<tr><td>${c.id}</td><td>${c.nome}</td><td>${c.total_alunos}</td></tr>`, 3);
+
+    carregar('/api/alunos', 'alunos',
+      (a) => `<tr><td>${a.id}</td><td>${a.nome}</td><td>${a.ra}</td><td>${a.curso?.nome ?? '-'}</td><td>${new Date(a.criado_em).toLocaleDateString('pt-BR')}</td></tr>`, 5);
+  </script>
+</body>
+</html>
