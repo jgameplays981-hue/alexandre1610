@@ -26,14 +26,22 @@ async function listarCursos() {
   }));
 }
 
-async function listarAlunos() {
-  const { data, error } = await supabase
+async function listarAlunos({ cursoId, inicio = 0, limite } = {}) {
+  let consulta = supabase
     .from('alunos')
-    .select(COLUNAS_ALUNO)
-    .order('id', { ascending: true });
+    .select(COLUNAS_ALUNO, limite ? { count: 'exact' } : undefined);
 
+  if (cursoId) consulta = consulta.eq('curso_id', cursoId);
+
+  consulta = consulta.order(cursoId ? 'nome' : 'id', { ascending: true });
+
+  if (limite) consulta = consulta.range(inicio, inicio + limite - 1);
+
+  const { data, error, count } = await consulta;
   if (error) throw error;
-  return data;
+
+  if (!limite) return data || [];
+  return { alunos: data || [], total: count ?? 0 };
 }
 
 module.exports = {
